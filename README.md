@@ -196,9 +196,9 @@ Datas sujeitas a ajuste pelo professor. N2 = Trabalho 1 + Trabalho 2 (5,0).
 | Pacote | Responsável |
 |---|---|
 | 1. Dados do tema | Marcos Paulo da Silva Oliveira |
-| 2. Núcleo da matriz esparsa | Samuel de Godoy Larroque |
+| 2. Núcleo da matriz esparsa | Marcos Paulo da Silva Oliveira |
 | 3. Funcionalidades | Samuel de Godoy Larroque |
-| 4. Relatório de memória | Marcos Paulo da Silva Oliveira |
+| 4. Relatório de memória | Todos |
 | 5. Apresentação e defesa | Todos |
 
 ## Equipe
