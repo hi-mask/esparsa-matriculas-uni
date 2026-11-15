@@ -108,7 +108,8 @@ O aluno 42 teve 7 matriculas no periodo (5 disciplinas diferentes)
 │   └── matrizEsparsa.h   # structs No e Tripla, protótipos
 ├── data/
 │   ├── semestre1.txt     # matrículas do 1º semestre (500x500 ou mais, 1000+ não-nulos)
-│   └── semestre2.txt     # matrículas do 2º semestre, usada na adição
+│   ├── semestre2.txt     # matrículas do 2º semestre, usada na adição
+│   └── ajustes.txt       # ajustes do 1º semestre (+1 inclusão, -1 trancamento), usado para demonstrar o cancelamento
 ├── entregas/             # versões em arquivo único enviadas ao Teams
 │   ├── T2_E2_esparsa-matriculas-uni.c
 │   └── T2_EF_esparsa-matriculas-uni.c
