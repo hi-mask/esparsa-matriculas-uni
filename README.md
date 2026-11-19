@@ -1,6 +1,6 @@
-# Matriz Esparsa de Matrículas Universitárias
+# Sistema de Análise da Distribuição de Matrículas Universitárias
 
-Matriz esparsa **aluno × disciplina** implementada em **C** com **lista encadeada ordenada** por `(linha, coluna)`. O projeto mostra, com dados do próprio sistema, quanta memória se economiza ao guardar só as matrículas que existem, em vez de uma tabela gigante cheia de zeros.
+Matriz esparsa **aluno × disciplina** implementada em **C** com **lista encadeada ordenada** por `(linha, coluna)`. O sistema analisa a demanda de cada disciplina e a carga de disciplinas de cada aluno, e mostra, com dados do próprio sistema, quanta memória se economiza ao guardar só as matrículas que existem, em vez de uma tabela gigante cheia de zeros.
 
 > Trabalho 2 da N2 de **Estrutura de Dados II** — PUC Goiás — Prof. Dr. Rovilson Mezencio.
 
@@ -8,7 +8,7 @@ Matriz esparsa **aluno × disciplina** implementada em **C** com **lista encadea
 
 ## Sobre o projeto
 
-Em uma universidade, cada aluno cursa poucas disciplinas de um catálogo enorme. Visto como tabela, o sistema é uma matriz em que a linha é o aluno, a coluna é a disciplina e a célula guarda a nota. Quase tudo é zero (o aluno não está matriculado), e uma matriz comum `int m[L][C]` gastaria memória com milhões de zeros.
+Em uma universidade, cada aluno cursa poucas disciplinas de um catálogo enorme. Visto como tabela, o sistema é uma matriz em que a linha é o aluno, a coluna é a disciplina e a célula indica a matrícula. Quase tudo é zero (o aluno não está matriculado), e uma matriz comum `int m[L][C]` gastaria memória com milhões de zeros.
 
 A matriz esparsa guarda só as células diferentes de zero, em uma lista encadeada mantida sempre ordenada por `(linha, coluna)`. A matriz comum acessa uma célula em O(1), mas a lista paga O(k) na busca, onde k é o número de não-nulos. O ganho está na memória, e é isso que o relatório final mede.
 
@@ -16,12 +16,18 @@ A matriz esparsa guarda só as células diferentes de zero, em uma lista encadea
 
 | Item | Definição |
 |---|---|
-| **Linha** | Aluno — código do aluno (`0` a `999`) |
-| **Coluna** | Disciplina — código da disciplina (`0` a `499`) |
-| **Valor** | Nota inteira de `1` a `10` |
-| **Célula vazia (zero)** | O aluno não está matriculado na disciplina |
+| **Linha** | Aluno, identificado pelo código numérico |
+| **Coluna** | Disciplina, identificada pelo código numérico |
+| **Valor** | `1` = o aluno está matriculado na disciplina no semestre. Na soma de dois semestres, `2` = cursou a disciplina nos dois semestres |
+| **Célula vazia (zero)** | O aluno não está matriculado na disciplina (a célula não é armazenada na lista) |
 
-Como o valor `0` nunca é armazenado, a menor nota guardada é `1`.
+Exemplos de células preenchidas:
+
+| Célula | Significado |
+|---|---|
+| `(1042, 17, 1)` | O aluno 1042 está matriculado na disciplina 17 |
+| `(1042, 35, 1)` | O aluno 1042 também está matriculado na disciplina 35 |
+| `(2310, 17, 1)` | O aluno 2310 está matriculado na disciplina 17 |
 
 ## O nó da lista
 
@@ -29,7 +35,7 @@ Como o valor `0` nunca é armazenado, a menor nota guardada é `1`.
 typedef struct No {
     int linha;            /* codigo do aluno */
     int coluna;           /* codigo da disciplina */
-    int valor;            /* nota (1 a 10); zero nunca e armazenado */
+    int valor;            /* 1 = matriculado; 2 = cursou nos dois semestres; zero nunca e armazenado */
     struct No *prox;
 } No;
 ```
@@ -46,24 +52,24 @@ typedef struct {
 
 ## Operações e seu significado no sistema
 
-| Operação | Significado no sistema de matrículas |
+| Operação | O que responde no sistema |
 |---|---|
-| `inserir(i, j, v)` | Matricular o aluno `i` na disciplina `j` com nota `v`. Posição repetida atualiza a nota; `v = 0` não insere |
-| `buscar(i, j)` | Consultar a nota do aluno `i` na disciplina `j` (`0` = não matriculado) |
+| `inserir(i, j, v)` | Matricular o aluno `i` na disciplina `j`. Par repetido atualiza o valor; `v = 0` não insere |
+| `buscar(i, j)` | O aluno `i` está matriculado na disciplina `j`? (`0` = não) |
 | `remover(i, j)` | Cancelar a matrícula do aluno `i` na disciplina `j` |
-| `somaLinha(i)` | Total de pontos do aluno `i` (soma das notas de todas as disciplinas) |
-| `contarLinha(i)` | Quantidade de disciplinas em que o aluno `i` está matriculado |
-| `somaColuna(j)` | Total de pontos da turma da disciplina `j` |
-| `contarColuna(j)` | Quantidade de alunos matriculados na disciplina `j` |
-| **Transposta** | Troca aluno × disciplina por disciplina × aluno: de "quais disciplinas o aluno cursa" para "quais alunos estão na disciplina" (diário de classe) |
-| **Adição** | Nota da 1ª avaliação + nota da 2ª avaliação = pontos acumulados no semestre. Resultado zero (ex.: ajuste que anula a nota) não é armazenado |
+| `somaLinha(i)` | Quantas disciplinas o aluno `i` está cursando? Na matriz dos dois semestres somados: quantas matrículas ele teve no total, contando repetições |
+| `somaColuna(j)` | Quantos alunos estão matriculados na disciplina `j`, ou seja, qual a demanda dela? Na matriz somada: total de matrículas da disciplina nos dois semestres |
+| `contarLinha(i)` | Quantas disciplinas **diferentes** o aluno `i` cursa? Em um semestre coincide com a soma da linha; na matriz somada, a disciplina cursada nos dois semestres conta uma só vez |
+| `contarColuna(j)` | Quantos alunos **diferentes** estão matriculados na disciplina `j`? |
+| **Transposta** | Passa de "aluno × disciplina" para "disciplina × aluno": cada linha passa a listar os alunos de uma disciplina, como uma lista de chamada |
+| **Adição** | Matrículas do 1º semestre + matrículas do 2º semestre = total de matrículas no ano letivo (valor `2` = cursou a disciplina nos dois semestres). Se uma das matrizes for de ajustes (`+1` inclusão, `-1` trancamento), a matrícula trancada resulta em `0` e não é armazenada (cancelamento) |
 
 Cada saída é impressa com a frase do tema, e não só o número:
 
 ```
-Aluno 42 cursa 8 disciplinas
-Aluno 42 acumulou 61 pontos em 8 disciplinas (media 7.6)
-Disciplina 17 tem 35 alunos matriculados
+O aluno 42 cursa 5 disciplinas
+A disciplina 17 tem 120 alunos matriculados
+O aluno 42 teve 7 matriculas no periodo (5 disciplinas diferentes)
 ```
 
 ## Funcionalidades
@@ -71,8 +77,8 @@ Disciplina 17 tem 35 alunos matriculados
 **Entrega 2 — Núcleo da matriz esparsa (em sala)**
 
 - [ ] `struct No` com `linha`, `coluna`, `valor` e `prox`
-- [ ] `inserir()` ordenado por (linha, coluna): posição repetida atualiza o valor e valor zero não insere
-- [ ] `buscar(i, j)`: devolve a nota ou `0` se a célula não existe
+- [ ] `inserir()` ordenado por (linha, coluna): par repetido atualiza o valor e valor zero não insere
+- [ ] `buscar(i, j)`: devolve o valor da célula ou `0` se ela não existe
 - [ ] Pelo menos 15 matrículas inseridas fora de ordem, com a lista impressa já ordenada
 - [ ] `imprimirRecorte()`: mostra um pedaço da matriz (ex.: linhas 0 a 5, colunas 0 a 5) com os zeros, como tabela
 - [ ] Ocupação em %: não-nulos / (linhas × colunas)
@@ -81,34 +87,32 @@ Disciplina 17 tem 35 alunos matriculados
 
 - [ ] `remover(i, j)` (cancelamento de matrícula)
 - [ ] `somaLinha`, `somaColuna`, `contarLinha` e `contarColuna` com as frases do tema
-- [ ] Carga de arquivo `.txt` (`linha;coluna;valor`) com matriz de pelo menos 500 × 500 e 1000+ não-nulos
-- [ ] Adição de duas matrizes (merge da Aula 3), tratando o cancelamento
-- [ ] Transposta, com o resultado também ordenado
+- [ ] Carga dos arquivos `.txt` (`linha;coluna;valor`) dos dois semestres, com matriz de pelo menos 500 × 500 e mais de 1000 não-nulos
+- [ ] Transposta ordenada (disciplina × aluno), funcionando como lista de chamada
+- [ ] Adição dos dois semestres (merge da Aula 3), tratando o cancelamento (resultado zero não é armazenado)
 - [ ] Menu interativo no console com todas as operações
-- [ ] Relatório de memória medido com `sizeof`, comparado com a estimativa da E1
-- [ ] Histórico do aluno: lista as disciplinas e notas de um aluno
-- [ ] Diário da disciplina: lista os alunos e notas de uma disciplina
-- [ ] Média do aluno e média da turma
-- [ ] Situação na disciplina: aprovados e reprovados (nota de corte configurável)
+- [ ] Relatório de memória: `sizeof(No)` medido e comparação densa × triplas × lista encadeada com `sizeof` no programa, confrontada com a estimativa da E1
 
 **SURPREENDA — funcionalidade extra (1,0 ponto)**
 
-- [ ] Ranking dos 5 alunos com maior média *(ideia registrada na E1; pode mudar até a E2)*
+- [ ] Ranking das 5 disciplinas mais procuradas e lista das disciplinas com baixa procura (possível turma vazia), para apoiar a decisão sobre a oferta de vagas *(ideia registrada na E1; pode mudar até a E2)*
 
 ## Estrutura do repositório
 
 ```
 .
 ├── src/
-│   ├── matrizEsparsa.h   # structs No e Tripla, protótipos
 │   ├── matrizEsparsa.c   # lista ordenada: inserir, buscar, remover, somas, adição, transposta
 │   └── main.c            # menu e testes
+├── libraries/
+│   └── matrizEsparsa.h   # structs No e Tripla, protótipos
 ├── data/
-│   ├── matriz_av1.txt    # carga de dados (500x500 ou mais, 1000+ não-nulos)
-│   └── matriz_av2.txt    # segunda matriz, usada na adição
+│   ├── semestre1.txt     # matrículas do 1º semestre (500x500 ou mais, 1000+ não-nulos)
+│   ├── semestre2.txt     # matrículas do 2º semestre, usada na adição
+│   └── ajustes.txt       # ajustes do 1º semestre (+1 inclusão, -1 trancamento), usado para demonstrar o cancelamento
 ├── entregas/             # versões em arquivo único enviadas ao Teams
-│   ├── T2_E2_<grupo>.c
-│   └── T2_EF_<grupo>.c
+│   ├── T2_E2_esparsa-matriculas-uni.c
+│   └── T2_EF_esparsa-matriculas-uni.c
 ├── docs/                 # E1 (.docx), roteiro do trabalho e relatório de memória
 └── README.md
 ```
@@ -120,13 +124,13 @@ Requer um compilador C (o projeto é compatível com o **Dev-C++**).
 **Com GCC:**
 
 ```bash
-gcc src/main.c src/matrizEsparsa.c -o esparsa
+gcc -Ilibraries src/main.c src/matrizEsparsa.c -o esparsa
 ./esparsa          # no Windows: esparsa.exe
 ```
 
 Execute o programa a partir da raiz do repositório, para que ele encontre os arquivos de `data/`.
 
-**Com Dev-C++:** abra os arquivos de `src/` em um projeto e compile (F11). Para as entregas, use o arquivo único em `entregas/`.
+**Com Dev-C++:** abra os arquivos de `src/` e `libraries/` em um projeto e compile (F11). Para as entregas, use o arquivo único em `entregas/`.
 
 ## Formato do arquivo de carga
 
@@ -136,36 +140,42 @@ Uma matrícula por linha, campos separados por `;`:
 linha;coluna;valor
 ```
 
-Exemplo (aluno 0 na disciplina 3 com nota 8, e assim por diante):
+Exemplo de um semestre (aluno, disciplina, 1 = matriculado):
 
 ```
-0;3;8
-0;17;7
-1;0;9
-1;7;6
-4;2;7
+1042;17;1
+1042;35;1
+2310;17;1
 ```
 
 Os registros podem vir fora de ordem: a lista se mantém ordenada a cada inserção.
 
+Em uma matriz de ajustes, o trancamento entra como `-1` (ex.: `1042;35;-1`). Ao somar com a matriz do semestre, a célula vira zero e deixa de existir.
+
 ## Exemplo de saída esperada (Entrega 2)
 
+Matriz de teste de 50 × 50:
+
 ```
-Lista: (0,3,8) (1,0,9) (1,7,6) (4,2,7) ...
-buscar(1,7) = 6   buscar(2,2) = 0
+Lista: (0,3,1) (1,0,1) (1,7,1) (4,2,1) ...
+buscar(1,7) = 1   buscar(2,2) = 0
 Ocupacao: 15 de 2500 celulas = 0.60%
 ```
 
 ## Cenário e estimativa de memória (E1)
 
-> Valores propostos para a E1. Ajustar caso o grupo escolha outras dimensões.
+Estimativa feita na Entrega 1, com 4 bytes por `int` e 24 bytes por nó da lista.
 
 | Medida | Valor |
 |---|---|
-| Dimensões | 1000 alunos × 500 disciplinas |
-| Total de células | 500.000 |
-| Não-nulos estimados (k) | ≈ 6.000 (cerca de 6 disciplinas por aluno) |
-| Ocupação estimada | ≈ 1,2% (abaixo do limite de 5%) |
+| Linhas (L) | 5.000 alunos |
+| Colunas (C) | 500 disciplinas |
+| Total de células (L × C) | 2.500.000 |
+| Não-nulos estimados (k) | 25.000 (5.000 alunos × 5 disciplinas em média por semestre) |
+| Ocupação (k / L × C) | 1% (abaixo do limite de 5%) |
+| Memória densa (L × C × 4 bytes) | 10.000.000 bytes (≈ 9,5 MB) |
+| Memória esparsa (k × 24 bytes) | 600.000 bytes (≈ 586 KB) |
+| Economia | ≈ 16,7 vezes menor |
 
 ## Relatório de memória
 
@@ -173,33 +183,35 @@ Ocupacao: 15 de 2500 celulas = 0.60%
 
 | Representação | Fórmula | Estimado (E1) | Medido (EF) |
 |---|---|---|---|
-| Matriz densa | linhas × colunas × `sizeof(int)` | 2.000.000 bytes | — |
-| Vetor de triplas | k × `sizeof(Tripla)` | 72.000 bytes | — |
-| Lista encadeada | k × `sizeof(No)` | 96.000 a 144.000 bytes | — |
+| Matriz densa | linhas × colunas × `sizeof(int)` | 10.000.000 bytes | — |
+| Vetor de triplas | k × `sizeof(Tripla)` | 300.000 bytes* | — |
+| Lista encadeada | k × `sizeof(No)` | 600.000 bytes | — |
 
-O `sizeof(No)` muda com a plataforma: 16 bytes em compilador de 32 bits e 24 bytes em 64 bits (por causa do alinhamento do ponteiro). Por isso o relatório final usa o valor medido, e não o estimado.
+\* A E1 estimou só a densa e a lista; o valor das triplas é k × 12 bytes, com o mesmo k.
+
+A E1 assumiu 24 bytes por nó, que é o valor de um compilador de 64 bits (3 `int` + padding + ponteiro de 8 bytes). Em compilador de 32 bits o `sizeof(No)` mede 16 bytes. Por isso o relatório final usa o valor medido.
 
 ## Entregas e pontuação
 
-| Entrega | Onde | Pontos | Manhã | Noite |
-|---|---|---|---|---|
-| E1 — Proposta, EAP e cálculo de memória | Em sala | 0,5 | 19/11 | 20/11 |
-| E2 — Núcleo da matriz esparsa | Em sala | 1,0 | 23/11 | 24/11 |
-| EF — Sistema completo e defesa | Casa + defesa | 2,5 | 30/11 ou 03/12 | 01/12 ou 04/12 |
-| SURPREENDA — funcionalidade extra | Casa + defesa | 1,0 | 30/11 ou 03/12 | 01/12 ou 04/12 |
-| **Total** | | **5,0** | | |
+| Entrega | Onde | Pontos | Data (turma da manhã) |
+|---|---|---|---|
+| E1 — Proposta, EAP e cálculo de memória | Em sala | 0,5 | 19/11 |
+| E2 — Núcleo da matriz esparsa | Em sala | 1,0 | 23/11 |
+| EF — Sistema completo e defesa | Casa + defesa | 2,5 | 30/11 ou 03/12 |
+| SURPREENDA — funcionalidade extra | Casa + defesa | 1,0 | 30/11 ou 03/12 |
+| **Total** | | **5,0** | |
 
 Datas sujeitas a ajuste pelo professor. N2 = Trabalho 1 + Trabalho 2 (5,0).
 
 ## Organização do trabalho (EAP)
 
-| Pacote | Responsável |
-|---|---|
-| 1. Dados do tema | Marcos Paulo da Silva Oliveira |
-| 2. Núcleo da matriz esparsa | Marcos Paulo da Silva Oliveira |
-| 3. Funcionalidades | Samuel de Godoy Larroque |
-| 4. Relatório de memória | Todos |
-| 5. Apresentação e defesa | Todos |
+| Pacote | O que o grupo vai fazer | Responsável |
+|---|---|---|
+| 1. Dados do tema | 1.1 Definir o cenário: 5.000 alunos, 500 disciplinas e cerca de 5 matrículas por aluno, com disciplinas mais e menos procuradas.<br>1.2 Gerar os arquivos `.txt` (`linha;coluna;valor`) de dois semestres, com pelo menos 500 × 500 e mais de 1.000 não-nulos. | Marcos Paulo da Silva Oliveira |
+| 2. Núcleo da matriz esparsa | 2.1 Definir a `struct No` e o `inserir()` ordenado por (aluno, disciplina): par repetido atualiza o valor; valor zero não insere.<br>2.2 `buscar(i, j)`, `imprimirRecorte()` e impressão da ocupação (não-nulos / células, em %). | Marcos Paulo da Silva Oliveira |
+| 3. Operações com significado | 3.1 `remover(i, j)`, `somaLinha`, `somaColuna`, `contarLinha` e `contarColuna`, com frases do tema.<br>3.2 Transposta ordenada (disciplina × aluno), funcionando como lista de chamada.<br>3.3 Adição dos dois semestres (merge), tratando o cancelamento. | Samuel de Godoy Larroque |
+| 4. Métricas e relatório de memória | 4.1 Medir `sizeof(No)` e comparar, com `sizeof` no programa, memória densa × triplas × lista encadeada.<br>4.2 Comparar os números medidos com a estimativa da E1 e escrever o relatório de memória. | Todos |
+| 5. Apresentação | 5.1 Menu interativo com todas as operações e carga dos arquivos de dados.<br>5.2 Roteiro da demonstração de 8 minutos e preparo da explicação das funções de cada integrante. | Todos |
 
 ## Equipe
 
